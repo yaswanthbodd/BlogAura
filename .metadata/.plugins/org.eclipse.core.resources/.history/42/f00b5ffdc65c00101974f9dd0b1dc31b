@@ -1,0 +1,24 @@
+package com.blogaura.service;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+
+@Service
+public class JwtService {
+	
+	// Secret Key
+	private String secretKey = null;
+	
+	public String getSecretKey() {
+		return secretKey = "0V5D627rpDxNkHV/XPSx5pOiGPMvRrxkzIlb0AOH7uo=";
+	}
+	
+	private SecretKey generateKey() {
+		byte[] decode = Decoders.BASE64.decode(getSecretKey());
+		return Keys.hmacShaKeyFor(decode);
+	}
+}

@@ -1,0 +1,30 @@
+package com.blogaura.service;
+
+import java.util.ArrayList;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import com.blogaura.entity.User;
+import com.blogaura.repository.UserRepository;
+
+@Service
+public class UserInfoService implements UserDetailsService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUserName(username);
+
+        return new org.springframework.security.core.userdetails.User(
+            user.getUserName(),       // ✅ Username for JWT validation
+            user.getPassword(),       // ✅ Hashed password
+            new ArrayList<>()         // ✅ Empty authorities (roles) for now
+        );
+    }
+}

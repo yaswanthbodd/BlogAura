@@ -1,0 +1,5 @@
+package com.blogaura.repository;
+
+public interface UserRepository {
+
+}

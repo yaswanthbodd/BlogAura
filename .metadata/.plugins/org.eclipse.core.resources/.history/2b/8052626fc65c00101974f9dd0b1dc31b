@@ -1,0 +1,5 @@
+package com.blogaura.service;
+
+public class JwtService {
+
+}

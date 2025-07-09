@@ -1,0 +1,5 @@
+package com.blogaura.config;
+
+public class WebSecurityConfig {
+	
+}
