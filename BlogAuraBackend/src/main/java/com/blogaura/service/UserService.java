@@ -1,11 +1,16 @@
 package com.blogaura.service;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.blogaura.entity.User;
 import com.blogaura.repository.UserRepository;
@@ -25,7 +30,13 @@ public class UserService {
 	@Autowired
 	private JwtService jwtService;
 	
-	public User register(User user) {
+	
+	
+	public User register(User user, MultipartFile imageFile) throws IOException {
+		
+		user.setImageName(imageFile.getOriginalFilename());
+		user.setImageType(imageFile.getContentType());
+		user.setImageData(imageFile.getBytes());
 		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 		return userRepository.save(user);
 	}
@@ -37,5 +48,10 @@ public class UserService {
 		if(authentication.isAuthenticated())
 			return jwtService.generateToken(user);
 		return "Failure";
+	}
+	
+	//Get All User Details
+	public List<User> getAllUsers(){
+		return userRepository.findAll();
 	}
 }

@@ -1,13 +1,20 @@
-import { Box, Button, Dialog, DialogTitle, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
+import { Box, Button, Dialog, DialogTitle, IconButton, InputAdornment, Snackbar, Stack, TextField, Typography } from '@mui/material'
 import ClearIcon from '@mui/icons-material/Clear';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import axios from 'axios';
+import { AppContext } from '../context/AppContext';
+import MuiAlert from '@mui/material/Alert';
 
 
 export const LoginBox = React.memo(
     ({open, handleClose}) => {
+    
+    //Context
+    const {bearerToken,setBearerToken} = useContext(AppContext);
+
+    const [openSnackbar, setOpenSnackbar] = useState(false);
 
     //console.log('Login Box');
 
@@ -37,15 +44,17 @@ export const LoginBox = React.memo(
         // const formData = new FormData();
         // formData.append("loginData",new Blob([JSON.stringify(loginData)], {type : 'application/json'}) )
         //console.log("Login Data : ",formData);
-        console.log("login data",loginData)
+        //console.log("login data",loginData)
 
         axios.post("http://localhost:8080/login",loginData)
         .then((response)=>{
-            console.log("login Succesfully...", response.data)
+            setBearerToken(response.data);
+            //console.log("Bearer Token : ",response.data);
             setLoginData({
                 userName : '',
                 password : '',
             })
+            setOpenSnackbar(true);
             setTimeout(() => {
                 handleClose();
             }, 1000);
@@ -95,6 +104,16 @@ export const LoginBox = React.memo(
                     </Box>
                 </Box>
             </Dialog>
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={2000}
+                onClose={() => setOpenSnackbar(false)}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                >
+                <MuiAlert onClose={() => setOpenSnackbar(false)} variant="filled" severity="success" sx={{ width: '100%' }}>
+                    Login Successfully
+                </MuiAlert>
+            </Snackbar>
         </Box>
     )
 }

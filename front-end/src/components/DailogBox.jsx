@@ -2,9 +2,10 @@ import { Box, Button, Dialog, DialogTitle, IconButton, InputAdornment, Snackbar,
 import ClearIcon from '@mui/icons-material/Clear';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios'
 import MuiAlert from '@mui/material/Alert';
+import { AppContext } from '../context/AppContext';
 
 
 export const DailogBox = React.memo(({open, handleClose}) => {
@@ -46,8 +47,8 @@ export const DailogBox = React.memo(({open, handleClose}) => {
         const formData = new FormData();
         formData.append("imageFile",image);
         formData.append("registrationData",new Blob([JSON.stringify(registrationData)], {type : 'application/json'}) )
-        console.log("Form Data : ",registrationData);
-        console.log("Image File", image)
+        //console.log("Form Data : ",registrationData);
+        //console.log("Image File", image)
 
         //Send the Data
         axios.post("http://localhost:8080/register",formData,{
@@ -56,7 +57,7 @@ export const DailogBox = React.memo(({open, handleClose}) => {
             },
         })
         .then((response)=>{
-            console.log("Registration Succesfully....", response.data);
+            //console.log("Registration Succesfully....", response.data);
             alert("Registration Succesfully");
             setRegistrationData({
                 userName : '',

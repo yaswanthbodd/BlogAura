@@ -1,16 +1,26 @@
 package com.blogaura.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.blogaura.entity.User;
 import com.blogaura.repository.UserRepository;
 import com.blogaura.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
 	
 	@Autowired
@@ -19,9 +29,19 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 	
+		
 	@PostMapping("/register")
-	public User register(@RequestBody User user) {
-		return userService.register(user);
+	public ResponseEntity<?> register(@RequestPart("registrationData") String userJson, 
+			@RequestPart("imageFile") MultipartFile imageFile) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			User user = objectMapper.readValue(userJson, User.class);
+			User user1 = userService.register(user, imageFile);
+			return new ResponseEntity<>(user1, HttpStatus.CREATED);
+		}catch(Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
 	}
 	
 	@PostMapping("/login")
@@ -32,6 +52,12 @@ public class UserController {
 	@GetMapping("/hello")
 	public String hello() {
 		return "Hello ";
+	}
+	
+	//Get All User Details
+	@GetMapping("/users")
+	public ResponseEntity<List<User>> getAllUsers(){
+		return new ResponseEntity<>(userService.getAllUsers(),HttpStatus.OK);
 	}
 
 }

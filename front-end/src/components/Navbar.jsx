@@ -2,9 +2,13 @@ import { AppBar, Box, Button, IconButton, Stack, Toolbar, Typography } from '@mu
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import { DailogBox } from './DailogBox';
 import { LoginBox } from './LoginBox';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useContext } from 'react';
+import { AppContext } from '../context/AppContext';
 
 export const Navbar = () => {
+
+    const {bearerToken} = useContext(AppContext);
+
     // Registration
     const [dialogOpen, setDialogOpen] = useState(false);
     const handleDialogOpen = useCallback(() => setDialogOpen(true), []);
@@ -38,12 +42,21 @@ export const Navbar = () => {
             </Typography>
             <Stack direction="row" spacing={2}>
                 <Button color="inherit">Home</Button>
-                <Button color="inherit" onClick={handleDialogOpen}>
-                Register
-                </Button>
-                <Button color="inherit" onClick={handleLoginDialogOpen}>
-                Login
-                </Button>
+                {
+                    !bearerToken ? (
+                                    <>
+                                        <Button color="inherit" onClick={handleDialogOpen}>Register</Button>
+                                        <Button color="inherit" onClick={handleLoginDialogOpen}>Login</Button>
+                                    </>
+                                    ) 
+                                : (
+                                    <>
+                                        <Button color="inherit">Logout</Button>
+                                    </>
+                                    )
+                }
+                {/* <Button color="inherit" onClick={handleDialogOpen}>Register</Button>
+                <Button color="inherit" onClick={handleLoginDialogOpen}>Login</Button> */}
                 <Button color="inherit">Create Post</Button>
             </Stack>
             </Toolbar>
