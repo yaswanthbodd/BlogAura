@@ -1,10 +1,16 @@
 package com.blogaura.controller;
 
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +22,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.blogaura.entity.User;
 import com.blogaura.repository.UserRepository;
+import com.blogaura.service.JwtService;
 import com.blogaura.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class UserController {
 	
 	@Autowired
@@ -29,7 +40,9 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 	
-		
+	@Autowired
+	private JwtService jwtService;
+	
 	@PostMapping("/register")
 	public ResponseEntity<?> register(@RequestPart("registrationData") String userJson, 
 			@RequestPart("imageFile") MultipartFile imageFile) {
@@ -37,27 +50,219 @@ public class UserController {
 			ObjectMapper objectMapper = new ObjectMapper();
 			User user = objectMapper.readValue(userJson, User.class);
 			User user1 = userService.register(user, imageFile);
-			return new ResponseEntity<>(user1, HttpStatus.CREATED);
+			
+			// Return user info without password
+			Map<String, Object> response = new HashMap<>();
+			response.put("id", user1.getId());
+			response.put("userName", user1.getUserName());
+			response.put("email", user1.getEmail());
+			response.put("age", user1.getAge());
+			response.put("message", "User registered successfully");
+			
+			return new ResponseEntity<>(response, HttpStatus.CREATED);
 		}catch(Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+			Map<String, String> errorResponse = new HashMap<>();
+			//errorResponse.put("error", e.getMessage());
+			errorResponse.put("error", "Username Already Existed");
+			return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		
 	}
 	
 	@PostMapping("/login")
-	public String login(@RequestBody User user) {
-		return userService.verify(user);
+	public ResponseEntity<?> login(@RequestBody User user, HttpServletResponse response) {
+		String jwt = userService.verify(user);
+		if(jwt.equals("Failure")) {
+			Map<String, String> errorResponse = new HashMap<>();
+			errorResponse.put("error", "Invalid Credentials");
+			return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+		}
+		
+		// Set JWT in HTTP-only Cookie
+		Cookie cookie = new Cookie("jwt", jwt);
+		cookie.setHttpOnly(true);
+		// cookie.setSecure(true); // Enable in production with HTTPS
+		cookie.setPath("/");
+		cookie.setMaxAge(5 * 60); // 24 hours to match JWT expiration
+		
+		response.addCookie(cookie);
+		
+		// Get user details for response
+		User loggedInUser = userRepository.findByUserName(user.getUserName());
+		Map<String, Object> loginResponse = new HashMap<>();
+		loginResponse.put("message", "Login successful");
+		loginResponse.put("user", Map.of(
+			"id", loggedInUser.getId(),
+			"userName", loggedInUser.getUserName(),
+			"email", loggedInUser.getEmail(),
+			"age", loggedInUser.getAge()
+		));
+		
+		return ResponseEntity.ok(loginResponse);
 	}
 	
-	@GetMapping("/hello")
-	public String hello() {
-		return "Hello ";
+	// Modified: Enhanced validation endpoint with user details
+	@GetMapping("/validate")
+	public ResponseEntity<?> validateToken(HttpServletRequest request) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		
+		if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+			UserDetails userDetails = (UserDetails) auth.getPrincipal();
+			User user = userRepository.findByUserName(userDetails.getUsername());
+			
+			if (user != null) {
+				Map<String, Object> response = new HashMap<>();
+				response.put("authenticated", true);
+				response.put("user", Map.of(
+					"id", user.getId(),
+					"userName", user.getUserName(),
+					"email", user.getEmail(),
+					"age", user.getAge(),
+					"image", user.getImageData()
+				));
+				return ResponseEntity.ok(response);
+			}
+		}
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("authenticated", false);
+		response.put("message", "Not authenticated");
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
 	}
 	
-	//Get All User Details
+	// Added: Get current user details
+	@GetMapping("/me")
+	public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		
+		if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+			UserDetails userDetails = (UserDetails) auth.getPrincipal();
+			User user = userRepository.findByUserName(userDetails.getUsername());
+			
+			if (user != null) {
+				Map<String, Object> userResponse = new HashMap<>();
+				userResponse.put("id", user.getId());
+				userResponse.put("userName", user.getUserName());
+				userResponse.put("email", user.getEmail());
+				userResponse.put("age", user.getAge());
+				userResponse.put("imageName", user.getImageName());
+				userResponse.put("imageType", user.getImageType());
+				// Don't include imageData in response for performance
+				
+				return ResponseEntity.ok(userResponse);
+			}
+		}
+		
+		Map<String, String> errorResponse = new HashMap<>();
+		errorResponse.put("error", "User not found or not authenticated");
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+	}
+	
+	@PostMapping("/logout")
+	public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request, HttpServletResponse response) {
+		System.out.println("=== LOGOUT ENDPOINT CALLED ===");
+		
+		Map<String, Object> logoutResponse = new HashMap<>();
+		
+		try {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			System.out.println("Current authentication: " + auth);
+			
+			// Always clear the cookie and context, regardless of auth status
+			Cookie cookie = new Cookie("jwt", "");
+			cookie.setHttpOnly(true);
+			cookie.setPath("/");
+			cookie.setMaxAge(0);
+			response.addCookie(cookie);
+			System.out.println("JWT cookie cleared");
+			
+			// Clear security context
+			SecurityContextHolder.clearContext();
+			System.out.println("Security context cleared");
+			
+			logoutResponse.put("message", "Logout successful");
+			logoutResponse.put("status", "success");
+			logoutResponse.put("timestamp", new Date().toString());
+			
+			System.out.println("Logout response: " + logoutResponse);
+			System.out.println("=== LOGOUT ENDPOINT COMPLETED ===");
+			
+			return ResponseEntity.ok(logoutResponse);
+			
+		} catch (Exception e) {
+			System.err.println("Logout error: " + e.getMessage());
+			e.printStackTrace();
+			
+			logoutResponse.put("error", "Logout failed");
+			logoutResponse.put("message", e.getMessage());
+			logoutResponse.put("status", "error");
+			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(logoutResponse);
+		}
+	}
+	
+	@PostMapping("/logout-simple")
+	public String logoutSimple(HttpServletResponse response) {
+		System.out.println("Simple logout called");
+		
+		Cookie cookie = new Cookie("jwt", "");
+		cookie.setHttpOnly(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(0);
+		response.addCookie(cookie);
+		
+		SecurityContextHolder.clearContext();
+		
+		return "Logout successful";
+	}
+	@GetMapping("/auth-status")
+	public ResponseEntity<?> getAuthStatus(HttpServletRequest request) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		
+		Map<String, Object> status = new HashMap<>();
+		status.put("timestamp", new Date().toString());
+		
+		if (auth != null) {
+			status.put("authenticated", auth.isAuthenticated());
+			status.put("principal", auth.getName());
+			status.put("authorities", auth.getAuthorities());
+			status.put("authType", auth.getClass().getSimpleName());
+			status.put("isAnonymous", auth instanceof AnonymousAuthenticationToken);
+		} else {
+			status.put("authenticated", false);
+			status.put("message", "No authentication found");
+		}
+		
+		// Check cookies
+		if (request.getCookies() != null) {
+			for (Cookie cookie : request.getCookies()) {
+				if ("jwt".equals(cookie.getName())) {
+					status.put("jwtCookiePresent", true);
+					status.put("jwtCookieValue", cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) + "...");
+					break;
+				}
+			}
+		}
+		
+		return ResponseEntity.ok(status);
+	}
+	
+	// Added: Test endpoint for authenticated users
+	@GetMapping("/protected")
+	public ResponseEntity<?> protectedEndpoint() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("message", "This is a protected endpoint");
+		response.put("user", auth.getName());
+		response.put("timestamp", new Date().toString());
+		
+		return ResponseEntity.ok(response);
+	}
+	
+	// Get All User Details
 	@GetMapping("/users")
 	public ResponseEntity<List<User>> getAllUsers(){
-		return new ResponseEntity<>(userService.getAllUsers(),HttpStatus.OK);
+		return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
 	}
 
 }

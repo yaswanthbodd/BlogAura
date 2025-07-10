@@ -2,7 +2,6 @@ package com.blogaura.config;
 
 import java.io.IOException;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,6 +16,7 @@ import com.blogaura.service.JwtService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -33,43 +33,74 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		
-		final String authHeader = request.getHeader("Authorization");
+		String jwt = null;
 		
-		if(authHeader == null || !authHeader.startsWith("Bearer")) {
+		// Read the JWT from cookies
+		if(request.getCookies() != null) {
+			for(Cookie cookie: request.getCookies()) {
+				if("jwt".equals(cookie.getName())) {
+					jwt = cookie.getValue();
+					System.out.println("JWT found in cookie: " + jwt);
+					break;
+				}
+			}
+		}
+		
+		if(jwt == null) {
+			System.out.println("No JWT cookie found");
 			filterChain.doFilter(request, response);
 			return;
 		}
 		
-		final String jwt = authHeader.substring(7);
-		final String userName = jwtService.extractUserName(jwt);
-		
-				
-		// Check the authentication from the SecurityContextHolder
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-	
-		
-		if(userName != null && authentication == null) {
+		try {
+			String userName = jwtService.extractUserName(jwt);
 			
-			// Authenticate
-			UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
+			// Check if user is already authenticated
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 			
-			
-			if(jwtService.isTokenValid(jwt, userDetails)) {
+			if(userName != null && authentication == null) {
 				
-				UsernamePasswordAuthenticationToken authenticationToken = 
-						new UsernamePasswordAuthenticationToken(userDetails, null , userDetails.getAuthorities());
+				// Load user details and validate token
+				UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
 				
-				// For SessionId
-				authenticationToken.setDetails(
-							new WebAuthenticationDetailsSource()
-									.buildDetails(request)
-				);
-				
-				SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+				if(jwtService.isTokenValid(jwt, userDetails)) {
+					System.out.println("JWT is valid for user: " + userName);
+					
+					UsernamePasswordAuthenticationToken authenticationToken = 
+							new UsernamePasswordAuthenticationToken(
+								userDetails, 
+								null, 
+								userDetails.getAuthorities()
+							);
+					
+					// Set authentication details
+					authenticationToken.setDetails(
+						new WebAuthenticationDetailsSource().buildDetails(request)
+					);
+					
+					SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+				} else {
+					System.out.println("JWT is invalid for user: " + userName);
+					// Clear invalid JWT cookie
+					clearJwtCookie(response);
+				}
 			}
+		} catch (Exception e) {
+			System.out.println("JWT validation failed: " + e.getMessage());
+			// Clear invalid JWT cookie
+			clearJwtCookie(response);
 		}
 		
 		filterChain.doFilter(request, response);
+	}
+	
+	// Helper method to clear JWT cookie
+	private void clearJwtCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie("jwt", null);
+		cookie.setHttpOnly(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(0);
+		response.addCookie(cookie);
 	}
 
 }

@@ -7,10 +7,10 @@ import axios from 'axios'
 import MuiAlert from '@mui/material/Alert';
 import { AppContext } from '../context/AppContext';
 
-
 export const DailogBox = React.memo(({open, handleClose}) => {
 
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const [showPassword, setShowPassword] = useState(false)
     const handleToggolePassword = () => {
@@ -33,7 +33,10 @@ export const DailogBox = React.memo(({open, handleClose}) => {
             ...prev,
             [name] : value
         }))
+        // Clear error when user starts typing
+        setErrorMessage('');
     }
+    
     // Handle Image File
     const handleImageFile = (e) => {
         const file = e.target.files[0];
@@ -41,14 +44,14 @@ export const DailogBox = React.memo(({open, handleClose}) => {
             setImage(file);
     }
 
-    // Handle the submitForm
+    // FIXED: Handle the submitForm with better error handling
     const handleSubmit = (e) => {
         e.preventDefault();
+        setErrorMessage('');
+
         const formData = new FormData();
         formData.append("imageFile",image);
         formData.append("registrationData",new Blob([JSON.stringify(registrationData)], {type : 'application/json'}) )
-        //console.log("Form Data : ",registrationData);
-        //console.log("Image File", image)
 
         //Send the Data
         axios.post("http://localhost:8080/register",formData,{
@@ -57,8 +60,7 @@ export const DailogBox = React.memo(({open, handleClose}) => {
             },
         })
         .then((response)=>{
-            //console.log("Registration Succesfully....", response.data);
-            alert("Registration Succesfully");
+            console.log("Registration Successfully....", response.data);
             setRegistrationData({
                 userName : '',
                 email : '',
@@ -71,25 +73,32 @@ export const DailogBox = React.memo(({open, handleClose}) => {
                 handleClose();
             }, 1000);
         })
-        .catch((error)=>{
-            console.error("Error Occured .... ", error)
-            alert("Something went Wrong")
+        .catch((error) => {
+            console.error("Registration Error: ", error);
+            const errMsg = error.response?.data?.error || "Registration failed. Please try again.";
+            setErrorMessage(errMsg);
         })
-        
     }
 
     return (
         <Box>
             <Dialog open={open} onClose={handleClose} >
-                <Box width='400px' height='570px' className="border-4 border-b-amber-600 border-t-blue-700 border-l-emerald-600 border-r-purple-600">
+                <Box width='400px' height='600px' className="border-4 border-b-amber-600 border-t-blue-700 border-l-emerald-600 border-r-purple-600">
                     <Box margin='10px'>
                         <Stack direction='row' justifyContent='space-between'>
                             <Typography variant='h5' fontWeight='700'>Register</Typography>
-                            <IconButton size='small'>
+                            <IconButton size='small' onClick={handleClose}>
                                 <ClearIcon />
                             </IconButton>
                         </Stack>
                         <Box component='form' onSubmit={handleSubmit} display='flex' flexDirection='column' gap={3} margin={4}>
+
+                            {/* FIXED: Added error message display */}
+                            {errorMessage && (
+                                <Typography variant='body2' color='error' sx={{ mb: 1 }}>
+                                    {errorMessage}
+                                </Typography>
+                            )}
 
                             <TextField required size='small' label='Username' name='userName' type='text' onChange={handleChange} value={registrationData.userName} />
 

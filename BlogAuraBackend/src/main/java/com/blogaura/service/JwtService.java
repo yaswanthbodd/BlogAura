@@ -25,6 +25,9 @@ public class JwtService {
 
 	public String generateToken(User user) {
 		Map<String, Object> claims = new HashMap<>();
+		claims.put("userId", user.getId());
+		claims.put("email", user.getEmail());
+		
 		return Jwts
 				.builder()
 				.claims()
@@ -32,7 +35,8 @@ public class JwtService {
 				.subject(user.getUserName())
 				.issuer("YB")
 				.issuedAt(new Date(System.currentTimeMillis()))
-				.expiration(new Date(System.currentTimeMillis() + 60*10*1000))
+				// Changed: Extended expiration to 24 hours instead of 1 minute
+				.expiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 24 hours
 				.and()
 				.signWith(generateKey())
 				.compact();
@@ -50,6 +54,16 @@ public class JwtService {
 
 	public String extractUserName(String token) {
 		return extractClaims(token, Claims::getSubject);
+	}
+
+	// Added: Method to extract user ID from token
+	public Long extractUserId(String token) {
+		return extractClaims(token, claims -> claims.get("userId", Long.class));
+	}
+
+	// Added: Method to extract email from token
+	public String extractEmail(String token) {
+		return extractClaims(token, claims -> claims.get("email", String.class));
 	}
 
 	private <T> T extractClaims(String token, Function<Claims, T> claimResolver) {
@@ -71,8 +85,21 @@ public class JwtService {
 		return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 
+	// Added: Method to check if token is valid without UserDetails
+	public boolean isTokenValid(String token) {
+		try {
+			return !isTokenExpired(token);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 	private boolean isTokenExpired(String token) {
+		try {
 			return extractExpiration(token).before(new Date());
+		} catch (Exception e) {
+			return true;
+		}
 	}
 
 	private Date extractExpiration(String token) {

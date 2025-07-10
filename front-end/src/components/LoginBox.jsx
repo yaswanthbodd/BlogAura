@@ -7,16 +7,14 @@ import axios from 'axios';
 import { AppContext } from '../context/AppContext';
 import MuiAlert from '@mui/material/Alert';
 
-
 export const LoginBox = React.memo(
     ({open, handleClose}) => {
     
     //Context
-    const {bearerToken,setBearerToken} = useContext(AppContext);
+    const {setIsAuthenticated} = useContext(AppContext);
 
     const [openSnackbar, setOpenSnackbar] = useState(false);
-
-    //console.log('Login Box');
+    const [errorMessage, setErrorMessage] = useState('');
 
     const [showPassword, setShowPassword] = useState(false)
     const handleToggolePassword = () => {
@@ -36,48 +34,87 @@ export const LoginBox = React.memo(
             ...prev,
             [name] : value
         }))
+        // Clear error when user starts typing
+        setErrorMessage('');
     }
     
-    // Handle the submitForm
-    const handleSubmit = (e) => {
+    // Handle the submitForm with proper cookie handling
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // const formData = new FormData();
-        // formData.append("loginData",new Blob([JSON.stringify(loginData)], {type : 'application/json'}) )
-        //console.log("Login Data : ",formData);
-        //console.log("login data",loginData)
+        setErrorMessage('');
+        try {
+            console.log("Attempting login...");
+            
+            // Send login request with credentials
+            const response = await axios.post("http://localhost:8080/login", loginData, {
+                withCredentials: true, // Important for cookie handling
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        axios.post("http://localhost:8080/login",loginData)
-        .then((response)=>{
-            setBearerToken(response.data);
-            //console.log("Bearer Token : ",response.data);
+            console.log("Login successful:", response.data);
+            
+            // Set authentication state
+            setIsAuthenticated(true);
+            
+            // Clear form
             setLoginData({
                 userName : '',
                 password : '',
-            })
+            });
+            
+            // Show success message
             setOpenSnackbar(true);
+            
+            // Close dialog after delay
             setTimeout(() => {
                 handleClose();
             }, 1000);
-        })
-        .catch((error)=>{
-            console.log("Something Wrong")
-        })
-
-        
+            
+        } catch (error) {
+            console.error("Login failed:", error);
+            
+            // Handle different error response formats
+            let errorMsg = "Login failed. Please try again.";
+            
+            if (error.response) {
+                // Server responded with error status
+                if (error.response.data) {
+                    if (typeof error.response.data === 'string') {
+                        errorMsg = error.response.data;
+                    } else if (error.response.data.message) {
+                        errorMsg = error.response.data.message;
+                    }
+                }
+            } else if (error.request) {
+                // Request was made but no response received
+                errorMsg = "Unable to connect to server. Please check your connection.";
+            }
+            
+            setErrorMessage(errorMsg);
+        }
     }
 
     return (
         <Box>
             <Dialog open={open} onClose={handleClose} >
-                <Box width='400px' height='300px' className="border-4 border-b-amber-600 border-t-blue-700 border-l-emerald-600 border-r-purple-600">
+                <Box width='400px' height='350px' className="border-4 border-b-amber-600 border-t-blue-700 border-l-emerald-600 border-r-purple-600">
                     <Box margin='10px'>
                         <Stack direction='row' justifyContent='space-between'>
                             <Typography variant='h5' fontWeight='700'>Login</Typography>
-                            <IconButton size='small'>
+                            <IconButton size='small' onClick={handleClose}>
                                 <ClearIcon />
                             </IconButton>
                         </Stack>
                         <Box component='form' onSubmit={handleSubmit} display='flex' flexDirection='column' gap={3} margin={4}>
+
+                            {/* Error message display */}
+                            {errorMessage && (
+                                <Typography variant='body2' color='error' sx={{ mb: 1 }}>
+                                    {errorMessage}
+                                </Typography>
+                            )}
 
                             <TextField required size='small' label='Username' name='userName' type='text' onChange={handleChange} value={loginData.userName} />
 
@@ -116,5 +153,4 @@ export const LoginBox = React.memo(
             </Snackbar>
         </Box>
     )
-}
-)
+})
