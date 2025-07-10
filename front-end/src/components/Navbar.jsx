@@ -33,6 +33,15 @@ export const Navbar = () => {
         [loginDialogOpen, handleLoginDialogClose]
     );
 
+    //Handle the createpost
+    const handlePost = useCallback(() => {
+        if (isAuthenticated) {
+            navigate("/post");
+        } else {
+            alert("Login the Profile");
+        }
+    }, [isAuthenticated, navigate]);
+
     // Enhanced logout handling
     const handleLogout = async () => {
         try {
@@ -82,15 +91,7 @@ export const Navbar = () => {
         );
     }
 
-    //Handle the createpost
-    const handlePost = () => {
-        if(isAuthenticated){
-            // Navigate
-            console.log("Hellllo");
-        }else{
-            alert("Login the Profile");
-        }
-    }
+    
     //console.log("User Data : ",userData.user.image)
     return (
         <Box>
