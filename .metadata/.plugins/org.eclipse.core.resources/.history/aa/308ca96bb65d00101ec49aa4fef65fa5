@@ -1,0 +1,5 @@
+package com.blogaura.controller;
+
+public class PostController {
+
+}

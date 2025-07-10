@@ -2,6 +2,7 @@ import { Avatar, Box, Button, IconButton, Paper, TextField, Typography } from '@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import axios from 'axios';
 
 const Upload = () => {
     const { userData } = useContext(AppContext);
@@ -29,13 +30,34 @@ const Upload = () => {
     }
 
     // Handle Submit
-    const handleSubmit = (e)=>{
+    const handleSubmit =async (e)=>{
         e.preventDefault();
+        
         const formData = new FormData();
-        formData.append("imageFile",postImage);
+        formData.append("image",postImage);
         formData.append("uploadData", new Blob([JSON.stringify(uploadData)], {type : 'application/json'}))
         console.log("Upload Data : ",uploadData)
         console.log("image : ",postImage);
+
+        try {
+            const res = await axios.post("http://localhost:8080/api/posts/create", formData, {
+                withCredentials: true, 
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+        });
+
+            console.log(res.data);
+            alert("Post created successfully!");
+            setUploadData({
+                title : '',
+                description : '',
+            })
+            setPostImage(null);
+        } catch (error) {
+            console.error("Error uploading post:", error);
+            alert("Failed to upload post");
+        }
     }
 
     return (

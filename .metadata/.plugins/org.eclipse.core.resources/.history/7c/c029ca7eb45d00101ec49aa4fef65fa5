@@ -1,0 +1,36 @@
+package com.blogaura.entity;
+
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Posts {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long postId;
+	
+	private String userName;
+	private String title;
+	private String description;
+	private LocalDateTime  postTime;
+	private int like;
+	private int dislike;
+	
+	//Post Pic
+	private String postImageName;
+	private String postImageType;
+	@Lob
+	private byte[] postImageData; 
+}

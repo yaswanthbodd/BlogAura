@@ -1,0 +1,55 @@
+package com.blogaura.controller;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.blogaura.dto.PostRequest;
+import com.blogaura.entity.Posts;
+import com.blogaura.entity.User;
+import com.blogaura.repository.PostRepository;
+import com.blogaura.repository.UserRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+@RestController
+@RequestMapping("/api/posts")
+@CrossOrigin(origins = "*")  // adjust if needed
+public class PostController {
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @PostMapping("/create")
+    public ResponseEntity<String> createPost(
+        @RequestPart("uploadData") PostRequest postRequest,
+        @RequestPart(value = "image", required = false) MultipartFile image
+    ) throws IOException {
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserName(userName);
+
+        Posts post = new Posts();
+        post.setTitle(postRequest.getTitle());
+        post.setDescription(postRequest.getDescription());
+        post.setPostTime(LocalDateTime.now());
+        post.setUser(user);
+
+        if (image != null && !image.isEmpty()) {
+            post.setPostImageName(image.getOriginalFilename());
+            post.setPostImageType(image.getContentType());
+            post.setPostImageData(image.getBytes());
+        }
+
+        postRepository.save(post);
+        return ResponseEntity.ok("Post created");
+    }
+
+}

@@ -1,0 +1,9 @@
+package com.blogaura.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.blogaura.entity.Posts;
+
+public interface PostRepository extends JpaRepository<Posts, Long> {
+
+}
