@@ -1,13 +1,15 @@
-import { Box, Button, Dialog, DialogTitle, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
+import { Box, Button, Dialog, DialogTitle, IconButton, InputAdornment, Snackbar, Stack, TextField, Typography } from '@mui/material'
 import ClearIcon from '@mui/icons-material/Clear';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios'
+import MuiAlert from '@mui/material/Alert';
 
 
 export const DailogBox = React.memo(({open, handleClose}) => {
 
-    //console.log("Register Page")
+    const [openSnackbar, setOpenSnackbar] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false)
     const handleToggolePassword = () => {
@@ -16,7 +18,7 @@ export const DailogBox = React.memo(({open, handleClose}) => {
 
     // Create Registration Data form
     const [registrationData, setRegistrationData] = useState({
-        username:'',
+        userName:'',
         email:'',
         password:'',
         age:'',
@@ -43,18 +45,36 @@ export const DailogBox = React.memo(({open, handleClose}) => {
         e.preventDefault();
         const formData = new FormData();
         formData.append("imageFile",image);
-        formData.append("registerData",new Blob([JSON.stringify(registrationData)], {type : 'application/json'}) )
+        formData.append("registrationData",new Blob([JSON.stringify(registrationData)], {type : 'application/json'}) )
         console.log("Form Data : ",registrationData);
         console.log("Image File", image)
-        
 
-        setRegistrationData({
-            username : '',
-            email : '',
-            password : '',
-            age : ''
+        //Send the Data
+        axios.post("http://localhost:8080/register",formData,{
+            headers : {
+                "Content-Type" : "multipart/form-data"
+            },
         })
-        setImage(null)
+        .then((response)=>{
+            console.log("Registration Succesfully....", response.data);
+            alert("Registration Succesfully");
+            setRegistrationData({
+                userName : '',
+                email : '',
+                password : '',
+                age : ''
+            })
+            setImage(null)
+            setOpenSnackbar(true);
+            setTimeout(() => {
+                handleClose();
+            }, 1000);
+        })
+        .catch((error)=>{
+            console.error("Error Occured .... ", error)
+            alert("Something went Wrong")
+        })
+        
     }
 
     return (
@@ -70,7 +90,7 @@ export const DailogBox = React.memo(({open, handleClose}) => {
                         </Stack>
                         <Box component='form' onSubmit={handleSubmit} display='flex' flexDirection='column' gap={3} margin={4}>
 
-                            <TextField required size='small' label='Username' name='username' type='text' onChange={handleChange} value={registrationData.username} />
+                            <TextField required size='small' label='Username' name='userName' type='text' onChange={handleChange} value={registrationData.userName} />
 
                             <TextField required size='small' label='Email' name='email' type='email' onChange={handleChange} value={registrationData.email}/>
 
@@ -93,7 +113,7 @@ export const DailogBox = React.memo(({open, handleClose}) => {
                                     }} 
                             />
 
-                            <TextField required size='small' label='number' name='age' type='number' onChange={handleChange} value={registrationData.age}/>
+                            <TextField required size='small' label='Age' name='age' type='number' onChange={handleChange} value={registrationData.age}/>
 
                             <Button variant='contained' component='label'>
                                 Upload Pic
@@ -118,6 +138,16 @@ export const DailogBox = React.memo(({open, handleClose}) => {
                     </Box>
                 </Box>
             </Dialog>
+            <Snackbar
+                    open={openSnackbar}
+                    autoHideDuration={2000}
+                    onClose={() => setOpenSnackbar(false)}
+                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                    >
+                    <MuiAlert onClose={() => setOpenSnackbar(false)} variant="filled" severity="success" sx={{ width: '100%' }}>
+                        Registration Successfully
+                    </MuiAlert>
+                </Snackbar>
         </Box>
     )
 })

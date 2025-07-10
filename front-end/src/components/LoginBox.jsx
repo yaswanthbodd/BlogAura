@@ -3,6 +3,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import React, { useState } from 'react';
+import axios from 'axios';
 
 
 export const LoginBox = React.memo(
@@ -17,7 +18,7 @@ export const LoginBox = React.memo(
 
     // Create Login Data form
     const [loginData, setLoginData] = useState({
-        username:'',
+        userName:'',
         password:'',
     })
 
@@ -33,14 +34,27 @@ export const LoginBox = React.memo(
     // Handle the submitForm
     const handleSubmit = (e) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append("login Data",new Blob([JSON.stringify(loginData)], {type : 'application/json'}) )
+        // const formData = new FormData();
+        // formData.append("loginData",new Blob([JSON.stringify(loginData)], {type : 'application/json'}) )
         //console.log("Login Data : ",formData);
+        console.log("login data",loginData)
 
-        setLoginData({
-            username : '',
-            password : '',
+        axios.post("http://localhost:8080/login",loginData)
+        .then((response)=>{
+            console.log("login Succesfully...", response.data)
+            setLoginData({
+                userName : '',
+                password : '',
+            })
+            setTimeout(() => {
+                handleClose();
+            }, 1000);
         })
+        .catch((error)=>{
+            console.log("Something Wrong")
+        })
+
+        
     }
 
     return (
@@ -56,7 +70,7 @@ export const LoginBox = React.memo(
                         </Stack>
                         <Box component='form' onSubmit={handleSubmit} display='flex' flexDirection='column' gap={3} margin={4}>
 
-                            <TextField required size='small' label='Username' name='username' type='text' onChange={handleChange} value={loginData.username} />
+                            <TextField required size='small' label='Username' name='userName' type='text' onChange={handleChange} value={loginData.userName} />
 
                             <TextField 
                                     required 
