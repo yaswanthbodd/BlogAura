@@ -2,6 +2,9 @@ package com.blogaura.controller;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.blogaura.dto.PostRequest;
+import com.blogaura.dto.PostResponse;
 import com.blogaura.entity.Posts;
 import com.blogaura.entity.User;
 import com.blogaura.repository.PostRepository;
@@ -28,6 +32,7 @@ public class PostController {
     @Autowired
     private UserRepository userRepository;
 
+    // Creating the Post
     @PostMapping("/create")
     public ResponseEntity<String> createPost(
         @RequestPart("uploadData") PostRequest postRequest,
@@ -50,6 +55,36 @@ public class PostController {
 
         postRepository.save(post);
         return ResponseEntity.ok("Post created");
+    }
+    
+    // Display Posts
+    @GetMapping("/all")
+    public ResponseEntity<List<PostResponse>> getAllPosts(){
+    	List<Posts> posts = postRepository.findAll();
+    	
+    	List<PostResponse> postResponses = posts.stream().map(post -> {
+    		PostResponse dto = new PostResponse();
+    		dto.setPostId(post.getPostId());
+    		dto.setTitle(post.getTitle());
+    		dto.setDescription(post.getDescription());
+    		dto.setPostTime(post.getPostTime());
+    		dto.setLikeCount(post.getLikeCount());
+    		dto.setDislikeCount(post.getDislikeCount());
+    		
+    		if(post.getPostImageData() != null) {
+    			dto.setPostImageType(post.getPostImageType());
+    			dto.setPostImageBase64(Base64.getEncoder().encodeToString(post.getPostImageData()));
+    		}
+    		
+    		User user = post.getUser();
+    		dto.setUserName(user.getUserName());
+    		if(user.getImageData() != null) {
+    			dto.setUserImageType(user.getImageType());
+    			dto.setUserImageBase64(Base64.getEncoder().encodeToString(user.getImageData()));
+    		}
+    		return dto;
+    	}).collect(Collectors.toList());
+    	return ResponseEntity.ok(postResponses);
     }
 
 }

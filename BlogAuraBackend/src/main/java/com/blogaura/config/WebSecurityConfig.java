@@ -43,7 +43,7 @@ public class WebSecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(
 				request -> request
-					.requestMatchers("/register", "/login", "/", "/csrf").permitAll()
+					.requestMatchers("/register", "/login", "/", "/csrf","/api/posts/all").permitAll()
 					.requestMatchers("/validate", "/me", "/logout", "/auth-status", "/protected").authenticated()
 					.anyRequest().authenticated()
 			)

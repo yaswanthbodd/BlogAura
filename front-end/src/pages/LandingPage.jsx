@@ -2,6 +2,7 @@ import {Box, Typography, CircularProgress} from '@mui/material'
 import { Navbar } from '../components/Navbar'
 import { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
+import HomeFeed from '../components/homefeed/HomeFeed';
 
 export const LandingPage = () => {
 
@@ -27,6 +28,9 @@ export const LandingPage = () => {
     return (
         <Box>
             <Navbar />
+            <Box marginTop={10}>
+                <HomeFeed />
+            </Box>
             {/* Your landing page content */}
         </Box>
     )
