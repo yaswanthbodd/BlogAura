@@ -73,7 +73,7 @@ const Upload = () => {
             <Paper
                 elevation={3}
                 sx={{
-                    height: postImage ? "600px" : "400px",
+                    height: postImage ? "630px" : "400px",
                     width: "400px",
                     border: '1px solid red',
                     borderRadius: 2,
@@ -102,7 +102,7 @@ const Upload = () => {
                     </Box>
 
                     <TextField size='small' type='text' label='Enter the title' name='title' onChange={handleUploadChange} value={uploadData.title} disabled={spinnerLoading}/>
-                    <TextField multiline minRows={4}  type='text' label='Enter the Description' name='description' onChange={handleUploadChange} value={uploadData.description} disabled={spinnerLoading}/>
+                    <TextField maxRows={5} multiline minRows={4}  type='text' label='Enter the Description' name='description' onChange={handleUploadChange} value={uploadData.description} disabled={spinnerLoading}/>
                     
                     <Button variant='contained' component='label'>
                                 Upload Pic

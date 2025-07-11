@@ -1,13 +1,13 @@
 import { useContext } from "react";
 import { LandingPage } from "./pages/LandingPage"
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
+import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom'
 import { AppContext } from "./context/AppContext";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import PostPage from "./pages/PostPage";
 import GlobalSpinner from "./components/spinner/GlobalSpinner";
 
 function App() {
-  const { loading } = useContext(AppContext);
+  const { loading,isAuthenticated } = useContext(AppContext);
   
   // FIXED: Better loading UI for App component
   if (loading) {
@@ -32,7 +32,8 @@ function App() {
         <GlobalSpinner />
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/post" element={<PostPage />} />
+          <Route path="/post" element={isAuthenticated ? <PostPage /> : <Navigate to="/" replace/>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </div>

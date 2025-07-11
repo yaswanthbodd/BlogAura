@@ -7,12 +7,15 @@ import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useLoading } from '../context/LoadingContext';
+import { ColorModeContext } from '../context/ThemeContext';
+import { Brightness4, Brightness7 } from '@mui/icons-material';
 
 export const Navbar = () => {
 
     const {isAuthenticated, setIsAuthenticated, loading, userData} = useContext(AppContext);
     const navigate = useNavigate();
     const {spinnerLoading, setSpinnerLoading} = useLoading();
+    const {toggleColorMode, mode} = useContext(ColorModeContext);
 
     // Registration
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -107,7 +110,9 @@ export const Navbar = () => {
                         </>
                     )
                 }
-                
+                <IconButton color="inherit" onClick={toggleColorMode}>
+                    {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
+                </IconButton>
             </Stack>
             </Toolbar>
         </AppBar>

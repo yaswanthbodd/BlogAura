@@ -4,13 +4,16 @@ import './index.css'
 import App from './App.jsx'
 import  ContextProvider  from './context/AppContext.jsx'
 import { LoadingProvider } from './context/LoadingContext.jsx'
+import ThemeContextProvider from './context/ThemeContext.jsx'
 
 
 createRoot(document.getElementById('root')).render(
-    <LoadingProvider>
-      <ContextProvider>
-        <App />
-      </ContextProvider>
-    </LoadingProvider>
+    <ThemeContextProvider>
+      <LoadingProvider>
+        <ContextProvider>
+          <App />
+        </ContextProvider>
+      </LoadingProvider>
+    </ThemeContextProvider>
 
 )

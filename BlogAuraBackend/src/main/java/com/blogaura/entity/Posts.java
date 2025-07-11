@@ -22,6 +22,7 @@ public class Posts {
     private User user;
 
     private String title;
+    @Lob
     private String description;
     private LocalDateTime postTime;
 

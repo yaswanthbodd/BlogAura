@@ -44,6 +44,7 @@ public class WebSecurityConfig {
 			.authorizeHttpRequests(
 				request -> request
 					.requestMatchers("/register", "/login", "/", "/csrf","/api/posts/all").permitAll()
+					.requestMatchers("/api/posts/**").authenticated()
 					.requestMatchers("/validate", "/me", "/logout", "/auth-status", "/protected").authenticated()
 					.anyRequest().authenticated()
 			)

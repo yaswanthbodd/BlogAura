@@ -17,4 +17,6 @@ public interface PostRepository extends JpaRepository<Posts, Long> {
 
     // Optional: Find all posts ordered by time (latest first)
     List<Posts> findAllByOrderByPostTimeDesc();
+    
+    
 }

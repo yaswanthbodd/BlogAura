@@ -60,7 +60,7 @@ public class PostController {
     // Display Posts
     @GetMapping("/all")
     public ResponseEntity<List<PostResponse>> getAllPosts(){
-    	List<Posts> posts = postRepository.findAll();
+    	List<Posts> posts = postRepository.findAllByOrderByPostTimeDesc();
     	
     	List<PostResponse> postResponses = posts.stream().map(post -> {
     		PostResponse dto = new PostResponse();
@@ -86,5 +86,22 @@ public class PostController {
     	}).collect(Collectors.toList());
     	return ResponseEntity.ok(postResponses);
     }
-
+    
+    // Increment like count for a post
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<String> likePost(@PathVariable Long postId){
+    	Posts post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post Not Found"));
+    	post.setLikeCount(post.getLikeCount() + 1);
+    	postRepository.save(post);
+    	return ResponseEntity.ok("Like incremented");
+    }
+    
+    // Increment dislike count for a post
+    @PostMapping("/{postId}/dislike")
+    public ResponseEntity<String> dislikePost(@PathVariable Long postId){
+    	Posts post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not Found"));
+    	post.setDislikeCount(post.getDislikeCount() + 1);
+    	postRepository.save(post);
+    	return ResponseEntity.ok("Dislike Incremented");
+    }
 }
