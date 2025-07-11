@@ -6,8 +6,11 @@ import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios'
 import MuiAlert from '@mui/material/Alert';
 import { AppContext } from '../context/AppContext';
+import { useLoading } from '../context/LoadingContext';
 
 export const DailogBox = React.memo(({open, handleClose}) => {
+
+    const {spinnerLoading, setSpinnerLoading} = useLoading();
 
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -48,11 +51,12 @@ export const DailogBox = React.memo(({open, handleClose}) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         setErrorMessage('');
-
+        setSpinnerLoading(true);
         const formData = new FormData();
         formData.append("imageFile",image);
         formData.append("registrationData",new Blob([JSON.stringify(registrationData)], {type : 'application/json'}) )
 
+        
         //Send the Data
         axios.post("http://localhost:8080/register",formData,{
             headers : {
@@ -78,12 +82,15 @@ export const DailogBox = React.memo(({open, handleClose}) => {
             const errMsg = error.response?.data?.error || "Registration failed. Please try again.";
             setErrorMessage(errMsg);
         })
+        .finally(()=>{
+            setSpinnerLoading(false);
+        })
     }
 
     return (
         <Box>
             <Dialog open={open} onClose={handleClose} >
-                <Box width='400px' height='600px' className="border-4 border-b-amber-600 border-t-blue-700 border-l-emerald-600 border-r-purple-600">
+                <Box width='400px' height={`${image} ? '500px' : '600px'`} className="border-4 border-b-amber-600 border-t-blue-700 border-l-emerald-600 border-r-purple-600">
                     <Box margin='10px'>
                         <Stack direction='row' justifyContent='space-between'>
                             <Typography variant='h5' fontWeight='700'>Register</Typography>
@@ -100,9 +107,9 @@ export const DailogBox = React.memo(({open, handleClose}) => {
                                 </Typography>
                             )}
 
-                            <TextField required size='small' label='Username' name='userName' type='text' onChange={handleChange} value={registrationData.userName} />
+                            <TextField required size='small' label='Username' name='userName' type='text' onChange={handleChange} value={registrationData.userName} disabled={spinnerLoading} />
 
-                            <TextField required size='small' label='Email' name='email' type='email' onChange={handleChange} value={registrationData.email}/>
+                            <TextField required size='small' label='Email' name='email' type='email' onChange={handleChange} value={registrationData.email} disabled={spinnerLoading}/>
 
                             <TextField 
                                     required 
@@ -120,14 +127,15 @@ export const DailogBox = React.memo(({open, handleClose}) => {
                                                 </IconButton>
                                             </InputAdornment>
                                         )
-                                    }} 
+                                    }}
+                                    disabled={spinnerLoading}
                             />
 
-                            <TextField required size='small' label='Age' name='age' type='number' onChange={handleChange} value={registrationData.age}/>
+                            <TextField required size='small' label='Age' name='age' type='number' onChange={handleChange} value={registrationData.age} disabled={spinnerLoading}/>
 
                             <Button variant='contained' component='label'>
                                 Upload Pic
-                                <input hidden accept='image/*' type='file' onChange={handleImageFile}/>
+                                <input hidden accept='image/*' type='file' onChange={handleImageFile} disabled={spinnerLoading}/>
                             </Button>
 
                             {/* Preview the image */}

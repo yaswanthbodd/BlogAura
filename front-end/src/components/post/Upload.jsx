@@ -3,9 +3,13 @@ import React, { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import axios from 'axios';
+import { useLoading } from '../../context/LoadingContext';
+import { useNavigate } from 'react-router-dom';
 
 const Upload = () => {
     const { userData } = useContext(AppContext);
+    const {spinnerLoading, setSpinnerLoading} = useLoading();
+    const navigate = useNavigate();
 
     // upload Data 
     const [uploadData, setUploadData] = useState({
@@ -32,7 +36,7 @@ const Upload = () => {
     // Handle Submit
     const handleSubmit =async (e)=>{
         e.preventDefault();
-        
+        setSpinnerLoading(true);
         const formData = new FormData();
         formData.append("image",postImage);
         formData.append("uploadData", new Blob([JSON.stringify(uploadData)], {type : 'application/json'}))
@@ -54,9 +58,13 @@ const Upload = () => {
                 description : '',
             })
             setPostImage(null);
+            navigate("/")
         } catch (error) {
             console.error("Error uploading post:", error);
             alert("Failed to upload post");
+        }
+        finally{
+            setSpinnerLoading(false);
         }
     }
 
@@ -93,12 +101,12 @@ const Upload = () => {
                         </IconButton>
                     </Box>
 
-                    <TextField size='small' type='text' label='Enter the title' name='title' onChange={handleUploadChange} value={uploadData.title}/>
-                    <TextField multiline minRows={4}  type='text' label='Enter the Description' name='description' onChange={handleUploadChange} value={uploadData.description}/>
+                    <TextField size='small' type='text' label='Enter the title' name='title' onChange={handleUploadChange} value={uploadData.title} disabled={spinnerLoading}/>
+                    <TextField multiline minRows={4}  type='text' label='Enter the Description' name='description' onChange={handleUploadChange} value={uploadData.description} disabled={spinnerLoading}/>
                     
                     <Button variant='contained' component='label'>
                                 Upload Pic
-                                <input hidden accept='image/*' type='file' onChange={handleImageFile}/>
+                                <input hidden accept='image/*' type='file' onChange={handleImageFile} disabled={spinnerLoading}/>
                     </Button>
                     {
                         postImage && (

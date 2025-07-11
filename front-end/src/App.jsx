@@ -4,6 +4,7 @@ import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
 import { AppContext } from "./context/AppContext";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import PostPage from "./pages/PostPage";
+import GlobalSpinner from "./components/spinner/GlobalSpinner";
 
 function App() {
   const { loading } = useContext(AppContext);
@@ -28,6 +29,7 @@ function App() {
   return (
     <div>
       <Router>
+        <GlobalSpinner />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/post" element={<PostPage />} />

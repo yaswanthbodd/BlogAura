@@ -6,12 +6,16 @@ import React, { useContext, useState } from 'react';
 import axios from 'axios';
 import { AppContext } from '../context/AppContext';
 import MuiAlert from '@mui/material/Alert';
+import { useNavigate } from 'react-router-dom';
+import { useLoading } from '../context/LoadingContext';
 
 export const LoginBox = React.memo(
     ({open, handleClose}) => {
     
     //Context
     const {setIsAuthenticated} = useContext(AppContext);
+    const navigate = useNavigate();
+    const {spinnerLoading, setSpinnerLoading} = useLoading();
 
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -42,6 +46,7 @@ export const LoginBox = React.memo(
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMessage('');
+        setSpinnerLoading(true);
         try {
             console.log("Attempting login...");
             
@@ -71,7 +76,7 @@ export const LoginBox = React.memo(
             setTimeout(() => {
                 handleClose();
             }, 1000);
-            
+            navigate("/");
         } catch (error) {
             console.error("Login failed:", error);
             
@@ -93,6 +98,9 @@ export const LoginBox = React.memo(
             }
             
             setErrorMessage(errorMsg);
+        }
+        finally{
+            setSpinnerLoading(false);
         }
     }
 
@@ -116,7 +124,7 @@ export const LoginBox = React.memo(
                                 </Typography>
                             )}
 
-                            <TextField required size='small' label='Username' name='userName' type='text' onChange={handleChange} value={loginData.userName} />
+                            <TextField required size='small' label='Username' name='userName' type='text' onChange={handleChange} value={loginData.userName} disabled={spinnerLoading}/>
 
                             <TextField 
                                     required 
@@ -134,7 +142,8 @@ export const LoginBox = React.memo(
                                                 </IconButton>
                                             </InputAdornment>
                                         )
-                                    }} 
+                                    }}
+                                    disabled={spinnerLoading}
                             />
                             <Button type='submit' variant='contained' color='success'>Login</Button>
                         </Box>
@@ -143,7 +152,7 @@ export const LoginBox = React.memo(
             </Dialog>
             <Snackbar
                 open={openSnackbar}
-                autoHideDuration={2000}
+                autoHideDuration={1000}
                 onClose={() => setOpenSnackbar(false)}
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 >
