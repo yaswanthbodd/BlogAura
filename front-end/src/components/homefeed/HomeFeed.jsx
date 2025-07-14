@@ -66,7 +66,7 @@ const HomeFeed = () => {
             {
                 loading ? Array.from({length : 3}).map((_,idx) => <SkeletionCard key={idx} />) :
                 posts.map((post, idx) => (
-                    <Card key={idx} sx={{ width: '500px' }}>
+                    <Card key={idx} sx={{ width: '500px' }} data-aos="fade-up">
                         <CardHeader
                             avatar={
                                 <Avatar src={imageSrc(post.userImageBase64, post.userImageType)} sx={{ bgcolor: red[500] }}>

@@ -1,14 +1,23 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { LandingPage } from "./pages/LandingPage"
 import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom'
 import { AppContext } from "./context/AppContext";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import PostPage from "./pages/PostPage";
 import GlobalSpinner from "./components/spinner/GlobalSpinner";
+import 'aos/dist/aos.css';
+import AOS from 'aos';
 
 function App() {
   const { loading,isAuthenticated } = useContext(AppContext);
   
+  useEffect(() => {
+    AOS.init({
+      duration: 1000, 
+      once: true,    
+    });
+  }, []);
+
   // FIXED: Better loading UI for App component
   if (loading) {
     return (
@@ -25,6 +34,8 @@ function App() {
       </Box>
     );
   }
+
+ 
 
   return (
     <div>
