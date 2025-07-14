@@ -1,5 +1,6 @@
 import axios from "axios";
 import { createContext, useEffect, useState } from "react";
+import API from "../components/apiservices/Api";
 
 export const AppContext = createContext();
 
@@ -13,7 +14,7 @@ const ContextProvider = (props) => {
         const checkAuth = async () => {
             try {
             console.log("Checking authentication status...");
-            const res = await axios.get('http://localhost:8080/validate', { withCredentials: true });
+            const res = await API.get('/validate');
             console.log("Validate response data:", res.data);
             setUserData(res.data);
             if (res.status === 200 && res.data?.authenticated === true) {

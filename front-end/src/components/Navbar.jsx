@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLoading } from '../context/LoadingContext';
 import { ColorModeContext } from '../context/ThemeContext';
 import { Brightness4, Brightness7 } from '@mui/icons-material';
+import API from './apiservices/Api'
 
 export const Navbar = () => {
 
@@ -53,8 +54,7 @@ export const Navbar = () => {
             console.log("Attempting logout...");
             setSpinnerLoading(true)
             // Send logout request to server
-            const response = await axios.post("http://localhost:8080/logout-simple", {}, { 
-                withCredentials: true,
+            const response = await API.post("/logout-simple", {}, { 
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -81,7 +81,8 @@ export const Navbar = () => {
     //console.log("User Data : ",userData.user.image)
     return (
         <Box>
-        <AppBar sx={{ bgcolor: 'green' }} position='fixed'>
+        <AppBar sx={{ bgcolor: 'green' }} position='fixed' data-aos="fade-down"
+     data-aos-duration="1500">
             <Toolbar>
             <IconButton size="large" aria-label="logo" edge="start" color="inherit">
                 <AcUnitIcon fontSize="large" color="error" />

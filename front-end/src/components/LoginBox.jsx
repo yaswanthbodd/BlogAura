@@ -8,6 +8,7 @@ import { AppContext } from '../context/AppContext';
 import MuiAlert from '@mui/material/Alert';
 import { useNavigate } from 'react-router-dom';
 import { useLoading } from '../context/LoadingContext';
+import API from './apiservices/Api'
 
 export const LoginBox = React.memo(
     ({open, handleClose}) => {
@@ -51,8 +52,7 @@ export const LoginBox = React.memo(
             console.log("Attempting login...");
             
             // Send login request with credentials
-            const response = await axios.post("http://localhost:8080/login", loginData, {
-                withCredentials: true, // Important for cookie handling
+            const response = await API.post("/login", loginData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }

@@ -5,6 +5,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import axios from 'axios';
 import { useLoading } from '../../context/LoadingContext';
 import { useNavigate } from 'react-router-dom';
+import API from '../apiservices/Api'
 
 const Upload = () => {
     const { userData } = useContext(AppContext);
@@ -44,8 +45,7 @@ const Upload = () => {
         console.log("image : ",postImage);
 
         try {
-            const res = await axios.post("http://localhost:8080/api/posts/create", formData, {
-                withCredentials: true, 
+            const res = await API.post("/api/posts/create", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }

@@ -7,6 +7,7 @@ import axios from 'axios'
 import MuiAlert from '@mui/material/Alert';
 import { AppContext } from '../context/AppContext';
 import { useLoading } from '../context/LoadingContext';
+import API from './apiservices/Api'
 
 export const DailogBox = React.memo(({open, handleClose}) => {
 
@@ -58,7 +59,7 @@ export const DailogBox = React.memo(({open, handleClose}) => {
 
         
         //Send the Data
-        axios.post("http://localhost:8080/register",formData,{
+        API.post("/register",formData,{
             headers : {
                 "Content-Type" : "multipart/form-data"
             },
